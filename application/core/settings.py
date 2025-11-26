@@ -151,6 +151,70 @@ class Settings(BaseSettings):
     COMPRESSION_PROMPT_VERSION: str = "v1.0"  # Track prompt iterations
     COMPRESSION_MAX_HISTORY_POINTS: int = 3  # Keep only last N compression points to prevent DB bloat
 
+    # Stripe Configuration (set via environment variables)
+    STRIPE_SECRET_KEY: Optional[str] = None
+    STRIPE_PUBLISHABLE_KEY: Optional[str] = None
+    STRIPE_WEBHOOK_SECRET: Optional[str] = None
+
+    # Subscription Plans Configuration
+    SUBSCRIPTION_PLANS: dict = {
+        "free": {
+            "name": "Free",
+            "price": 0,
+            "request_limit": 1000,
+            "features": ["basic_models"],
+            "stripe_price_id": "price_1SVje6QZf6X1AyY5M7FaQzlS",
+            "stripe_product_id": "prod_TSeyFs4TEbju1A",
+        },
+        "pro": {
+            "name": "Pro",
+            "price": 15,
+            "request_limit": 10000,
+            "features": ["all_models"],
+            "stripe_price_id": "price_1SVje7QZf6X1AyY5KoKCiHea",
+            "stripe_product_id": "prod_TSey5KafEFEsW9",
+        },
+        "enterprise": {
+            "name": "Enterprise",
+            "price": 30,
+            "request_limit": 100000,
+            "features": ["all_models", "priority_processing"],
+            "stripe_price_id": "price_1SVje8QZf6X1AyY5aQpJxo0A",
+            "stripe_product_id": "prod_TSeyNNEx9WnH11",
+        },
+    }
+
+    # Token Cost Markup
+    TOKEN_COST_MARKUP_PERCENTAGE: float = 5.0
+
+    # Model Pricing (USD per 1K tokens)
+    MODEL_PRICING: dict = {
+        "gpt-4": {"prompt": 0.03, "completion": 0.06},
+        "gpt-4-turbo": {"prompt": 0.01, "completion": 0.03},
+        "gpt-3.5-turbo": {"prompt": 0.0005, "completion": 0.0015},
+        "claude-3-opus": {"prompt": 0.015, "completion": 0.075},
+        "claude-3-sonnet": {"prompt": 0.003, "completion": 0.015},
+        "claude-3-haiku": {"prompt": 0.00025, "completion": 0.00125},
+    }
+
+    # Password Security
+    PASSWORD_MIN_LENGTH: int = 8
+    PASSWORD_REQUIRE_UPPERCASE: bool = True
+    PASSWORD_REQUIRE_LOWERCASE: bool = True
+    PASSWORD_REQUIRE_DIGIT: bool = True
+    PASSWORD_REQUIRE_SPECIAL: bool = True
+
+    # JWT Configuration (enhance existing)
+    JWT_ACCESS_TOKEN_EXPIRES: int = 3600  # 1 hour
+    JWT_REFRESH_TOKEN_EXPIRES: int = 2592000  # 30 days
+
+    # Email Configuration (for future email verification)
+    SMTP_HOST: Optional[str] = None
+    SMTP_PORT: Optional[int] = None
+    SMTP_USERNAME: Optional[str] = None
+    SMTP_PASSWORD: Optional[str] = None
+    SMTP_FROM_EMAIL: Optional[str] = None
+
 
 path = Path(__file__).parent.parent.absolute()
 settings = Settings(_env_file=path.joinpath(".env"), _env_file_encoding="utf-8")

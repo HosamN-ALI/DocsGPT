@@ -17,6 +17,9 @@ from application.api.answer import answer  # noqa: E402
 from application.api.internal.routes import internal  # noqa: E402
 from application.api.user.routes import user  # noqa: E402
 from application.api.connector.routes import connector  # noqa: E402
+from application.api.auth.routes import auth_ns  # noqa: E402
+from application.api.subscription.routes import subscription_ns  # noqa: E402
+from application.api.webhooks.stripe import webhook_ns  # noqa: E402
 from application.celery_init import celery  # noqa: E402
 from application.core.settings import settings  # noqa: E402
 
@@ -40,6 +43,11 @@ app.config.update(
 )
 celery.config_from_object("application.celeryconfig")
 api.init_app(app)
+
+# Register new namespaces for subscription system
+api.add_namespace(auth_ns, path="/api/auth")
+api.add_namespace(subscription_ns, path="/api/subscription")
+api.add_namespace(webhook_ns, path="/api/webhooks")
 
 if settings.AUTH_TYPE in ("simple_jwt", "session_jwt") and not settings.JWT_SECRET_KEY:
     key_file = ".jwt_secret_key"
@@ -73,6 +81,8 @@ def get_config():
     response = {
         "auth_type": settings.AUTH_TYPE,
         "requires_auth": settings.AUTH_TYPE in ["simple_jwt", "session_jwt"],
+        "stripe_publishable_key": settings.STRIPE_PUBLISHABLE_KEY,
+        "features": {"subscriptions": True, "token_tracking": True},
     }
     return jsonify(response)
 
