@@ -1,0 +1,116 @@
+# أوامر التثبيت الكاملة - انسخ والصق في السيرفر
+# ===============================================
+
+# 1. حذف المجلد القديم واستنساخ جديد
+cd /root
+rm -rf docgpt
+git clone https://github.com/HosamN-ALI/DocsGPT.git docgpt
+cd docgpt
+
+# 2. إنشاء ملف .env للـ Backend
+cat > .env << 'EOF'
+MONGO_URI=mongodb://mongodb:27017/
+MONGO_DB_NAME=docsgpt
+AUTH_TYPE=session_jwt
+JWT_SECRET_KEY=your-super-secret-key-change-this-in-production-12345
+STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key_here
+STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key_here
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
+FREE_PRODUCT_ID=prod_free
+FREE_PRICE_ID=price_free
+PRO_PRODUCT_ID=prod_TSey5KafEFEsW9
+PRO_PRICE_ID=price_1SVje7QZf6X1AyY5KoKCiHea
+ENTERPRISE_PRODUCT_ID=prod_TSeyNNEx9WnH11
+ENTERPRISE_PRICE_ID=price_1SVje8QZf6X1AyY5aQpJxo0A
+COMPRESSION_MODEL_OVERRIDE=gpt-4o-mini
+COMPRESSION_PROMPT_VERSION=v1.0
+COMPRESSION_MAX_HISTORY_POINTS=3
+EOF
+
+# 3. إنشاء ملف .env للـ Frontend
+cat > frontend/.env << 'EOF'
+VITE_STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key_here
+VITE_API_BASE_URL=http://78.31.67.155:7091
+EOF
+
+# 4. تثبيت مكتبات Python
+pip3 install -r application/requirements.txt
+
+# 5. بدء MongoDB
+docker compose up -d mongodb
+sleep 30
+
+# 6. تهيئة قاعدة البيانات
+python3 application/init_db_indexes.py
+
+# 7. بدء جميع خدمات Docker
+docker compose up -d
+
+# 8. بناء Frontend
+cd frontend
+npm install
+npm run build
+
+# 9. تثبيت PM2 وتشغيل Frontend
+npm install -g pm2
+pm2 delete frontend 2>/dev/null || true
+pm2 start npm --name "frontend" -- run preview -- --host 0.0.0.0 --port 5173
+pm2 save
+pm2 startup
+
+# 10. تثبيت وإعداد Nginx
+apt install -y nginx
+
+cat > /etc/nginx/sites-available/docsgpt << 'EOFNGINX'
+server {
+    listen 80;
+    server_name 78.31.67.155;
+
+    location / {
+        proxy_pass http://localhost:5173;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    location /api {
+        proxy_pass http://localhost:7091;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+EOFNGINX
+
+ln -sf /etc/nginx/sites-available/docsgpt /etc/nginx/sites-enabled/
+rm -f /etc/nginx/sites-enabled/default
+nginx -t
+systemctl restart nginx
+systemctl enable nginx
+
+# 11. إعداد Firewall
+ufw --force enable
+ufw allow 22/tcp
+ufw allow 80/tcp
+ufw allow 443/tcp
+
+# 12. التحقق من الخدمات
+echo "=== Docker Services ==="
+docker compose ps
+
+echo "=== PM2 Processes ==="
+pm2 list
+
+echo "=== Nginx Status ==="
+systemctl status nginx
+
+# 13. اختبار API
+echo "=== Testing API ==="
+curl http://localhost:7091/api/subscription/plans
+
+echo ""
+echo "✅ Installation Complete!"
+echo "Frontend: http://78.31.67.155"
+echo "Backend:  http://78.31.67.155/api"
