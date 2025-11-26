@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:6
+    container_name: docsgpt-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=docsgpt
+    networks:
+      - docsgpt-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: docsgpt-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - docsgpt-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: docsgpt-backend
+    restart: unless-stopped
+    ports:
+      - "7091:7091"
+    env_file:
+      - .env
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/docsgpt
+      - REDIS_URL=redis://redis:6379
+      - FLASK_APP=application.app:create_app
+      - FLASK_ENV=production
+    depends_on:
+      - mongodb
+      - redis
+    volumes:
+      - ./application:/app/application
+      - ./uploads:/app/uploads
+    networks:
+      - docsgpt-network
+    command: gunicorn --bind 0.0.0.0:7091 --workers 4 --timeout 120 "application.app:create_app()"
+
+  celery-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: docsgpt-celery
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/docsgpt
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - mongodb
+      - redis
+      - backend
+    volumes:
+      - ./application:/app/application
+      - ./uploads:/app/uploads
+    networks:
+      - docsgpt-network
+    command: celery -A application.celery_worker.celery worker --loglevel=info
+
+volumes:
+  mongodb_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  docsgpt-network:
+    driver: bridge
