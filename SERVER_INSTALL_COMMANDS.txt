@@ -1,0 +1,200 @@
+========================================
+DocsGPT Server Installation Commands
+========================================
+
+IMPORTANT: Run these commands on your server (78.31.67.155) as root user
+
+========================================
+Method 1: AUTOMATIC INSTALLATION (Recommended)
+========================================
+
+# Step 1: Clone or update the repository
+cd /root
+rm -rf DocsGPT
+git clone https://github.com/HosamN-ALI/DocsGPT.git
+cd DocsGPT
+
+# Step 2: Run the automatic installer
+chmod +x install_server_simple.sh
+./install_server_simple.sh
+
+# That's it! The script will:
+# ✅ Install Docker, Docker Compose, Node.js, PM2, Nginx
+# ✅ Create .env files for backend and frontend
+# ✅ Start MongoDB and Redis
+# ✅ Initialize database indexes
+# ✅ Build and start frontend with PM2
+# ✅ Configure Nginx reverse proxy
+# ✅ Start backend and Celery worker
+
+========================================
+Method 2: MANUAL INSTALLATION
+========================================
+
+If the automatic script fails, follow these steps:
+
+# 1. Clone the repository
+cd /root
+git clone https://github.com/HosamN-ALI/DocsGPT.git
+cd DocsGPT
+
+# 2. Start MongoDB and Redis
+docker compose up -d mongodb redis
+
+# Wait 10 seconds for MongoDB to be ready
+sleep 10
+
+# 3. Initialize database (if needed)
+pip3 install pymongo python-dotenv
+python3 application/init_db_indexes.py
+
+# 4. Build and start frontend
+cd frontend
+npm install
+npm run build
+pm2 delete frontend 2>/dev/null || true
+pm2 start npm --name "frontend" -- run dev
+pm2 save
+cd ..
+
+# 5. Start backend services
+docker compose up -d backend celery-worker
+
+# 6. Check status
+docker compose ps
+pm2 list
+
+========================================
+AFTER INSTALLATION
+========================================
+
+# 1. Update Stripe Keys
+nano .env
+# Update these lines:
+# STRIPE_SECRET_KEY=sk_test_YOUR_KEY_HERE
+# STRIPE_PUBLISHABLE_KEY=pk_test_YOUR_KEY_HERE
+# STRIPE_WEBHOOK_SECRET=whsec_YOUR_SECRET_HERE
+
+nano frontend/.env
+# Update this line:
+# VITE_STRIPE_PUBLISHABLE_KEY=pk_test_YOUR_KEY_HERE
+
+# 2. Restart services after updating keys
+docker compose restart backend
+pm2 restart frontend
+
+# 3. Test the application
+curl http://localhost:7091/api/subscription/plans
+
+========================================
+ACCESS THE APPLICATION
+========================================
+
+Frontend: http://78.31.67.155
+API: http://78.31.67.155/api
+
+Test in browser:
+1. Go to: http://78.31.67.155/register
+2. Create account: test@example.com / Test123!@#
+3. Login and check subscription plans
+4. Test Stripe checkout with card: 4242 4242 4242 4242
+
+========================================
+USEFUL COMMANDS
+========================================
+
+# View backend logs
+docker compose logs -f backend
+
+# View frontend logs
+pm2 logs frontend
+
+# View all service status
+docker compose ps
+pm2 list
+systemctl status nginx
+
+# Restart services
+docker compose restart backend
+pm2 restart frontend
+systemctl restart nginx
+
+# Stop all services
+docker compose stop
+pm2 stop frontend
+
+# Start all services
+docker compose up -d
+pm2 start frontend
+
+========================================
+STRIPE WEBHOOK SETUP
+========================================
+
+1. Go to: https://dashboard.stripe.com/test/webhooks
+2. Click "Add endpoint"
+3. URL: http://78.31.67.155/api/webhooks/stripe
+4. Events to select:
+   - checkout.session.completed
+   - customer.subscription.created
+   - customer.subscription.updated
+   - customer.subscription.deleted
+5. Copy webhook secret and update in .env
+6. Restart backend: docker compose restart backend
+
+========================================
+SECURITY (IMPORTANT!)
+========================================
+
+# 1. Change JWT Secret
+openssl rand -hex 32
+# Copy the output and update JWT_SECRET_KEY in .env
+
+# 2. Setup firewall
+ufw allow 22/tcp
+ufw allow 80/tcp
+ufw allow 443/tcp
+ufw enable
+
+# 3. For production, setup SSL
+apt-get install -y certbot python3-certbot-nginx
+# certbot --nginx -d yourdomain.com
+
+========================================
+TROUBLESHOOTING
+========================================
+
+# Backend not working?
+docker compose logs backend
+docker compose restart backend
+
+# Frontend not working?
+pm2 logs frontend
+pm2 restart frontend
+
+# Database connection error?
+docker compose logs mongodb
+docker compose restart mongodb
+
+# Port already in use?
+lsof -i :7091  # Backend
+lsof -i :5173  # Frontend
+
+# Full reset (if needed)
+docker compose down
+docker compose up -d mongodb redis
+sleep 10
+docker compose up -d backend celery-worker
+pm2 restart frontend
+
+========================================
+DOCUMENTATION
+========================================
+
+Full guides available in the repository:
+- MANUAL_INSTALL.md - Complete step-by-step guide (Arabic/English)
+- SUBSCRIPTION_SYSTEM_COMPLETE.md - System overview
+- QUICK_START_GUIDE.md - Testing guide
+- README_AR.md - Arabic quick reference
+
+========================================
