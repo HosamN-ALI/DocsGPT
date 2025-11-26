@@ -16,6 +16,10 @@ import Navigation from './Navigation';
 import PageNotFound from './PageNotFound';
 import Setting from './settings';
 import Notification from './components/Notification';
+import LoginForm from './components/auth/LoginForm';
+import RegisterForm from './components/auth/RegisterForm';
+import PricingPlans from './components/subscription/PricingPlans';
+import UsageDashboard from './components/subscription/UsageDashboard';
 
 function AuthWrapper({ children }: { children: React.ReactNode }) {
   const { isAuthLoading } = useTokenAuth();
@@ -75,6 +79,11 @@ export default function App() {
         />
       )}
       <Routes>
+        {/* Auth Routes */}
+        <Route path="/login" element={<LoginForm />} />
+        <Route path="/register" element={<RegisterForm />} />
+        
+        {/* Protected Routes */}
         <Route
           element={
             <AuthWrapper>
@@ -85,7 +94,11 @@ export default function App() {
           <Route index element={<Conversation />} />
           <Route path="/settings/*" element={<Setting />} />
           <Route path="/agents/*" element={<Agents />} />
+          <Route path="/subscription" element={<PricingPlans />} />
+          <Route path="/subscription/usage" element={<UsageDashboard />} />
         </Route>
+        
+        {/* Public Routes */}
         <Route path="/share/:identifier" element={<SharedConversation />} />
         <Route path="/shared/agent/:agentId" element={<SharedAgentGate />} />
         <Route path="/*" element={<PageNotFound />} />

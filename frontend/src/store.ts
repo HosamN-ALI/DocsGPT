@@ -61,6 +61,8 @@ const store = configureStore({
     sharedConversation: sharedConversationSlice.reducer,
     upload: uploadReducer,
     agentPreview: agentPreviewReducer,
+    auth: require('./features/auth/authSlice').default,
+    subscription: require('./features/subscription/subscriptionSlice').default,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(prefListenerMiddleware.middleware),

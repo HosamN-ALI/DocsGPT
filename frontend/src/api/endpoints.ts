@@ -79,6 +79,21 @@ const endpoints = {
     DELETE_ALL: '/api/delete_all_conversations',
     UPDATE: '/api/update_conversation_name',
   },
+  AUTH: {
+    REGISTER: '/api/auth/register',
+    LOGIN: '/api/auth/login',
+    ME: '/api/auth/me',
+    CHANGE_PASSWORD: '/api/auth/change-password',
+    REFRESH: '/api/auth/refresh',
+  },
+  SUBSCRIPTION: {
+    PLANS: '/api/subscription/plans',
+    CURRENT: '/api/subscription/current',
+    CHECKOUT: '/api/subscription/checkout',
+    CANCEL: '/api/subscription/cancel',
+    HISTORY: '/api/subscription/history',
+    USAGE: '/api/subscription/usage',
+  },
 };
 
 export default endpoints;

@@ -25,6 +25,7 @@ import Sources from './Sources';
 import General from './General';
 import Logs from './Logs';
 import Tools from './Tools';
+import AccountSettings from '../components/subscription/AccountSettings';
 
 export default function Settings() {
   const dispatch = useDispatch();
@@ -113,6 +114,7 @@ export default function Settings() {
         <Route path="analytics" element={<Analytics />} />
         <Route path="logs" element={<Logs />} />
         <Route path="tools" element={<Tools />} />
+        <Route path="account" element={<AccountSettings />} />
         <Route path="*" element={<Navigate to="/settings" replace />} />
       </Routes>
     </div>
