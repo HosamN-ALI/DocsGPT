@@ -138,12 +138,17 @@ echo "Waiting for MongoDB to be ready..."
 sleep 10
 
 echo -e "${GREEN}[8/10] Initializing database indexes...${NC}"
-if [ -f "$PROJECT_DIR/application/init_db_indexes.py" ]; then
-    # Install Python dependencies temporarily for initialization
-    pip3 install pymongo python-dotenv
-    python3 "$PROJECT_DIR/application/init_db_indexes.py"
+# Install Python dependencies for initialization
+pip3 install --quiet pymongo python-dotenv 2>/dev/null || pip3 install pymongo python-dotenv
+
+# Use standalone init script
+if [ -f "$PROJECT_DIR/init_db_standalone.py" ]; then
+    # Set environment variables and run
+    export MONGO_URI="mongodb://localhost:27017/"
+    export MONGO_DB_NAME="docsgpt"
+    python3 "$PROJECT_DIR/init_db_standalone.py"
 else
-    echo -e "${YELLOW}⚠️  init_db_indexes.py not found. Skipping database initialization.${NC}"
+    echo -e "${YELLOW}⚠️  init_db_standalone.py not found. Skipping database initialization.${NC}"
 fi
 
 echo -e "${GREEN}[9/10] Installing and building frontend...${NC}"
