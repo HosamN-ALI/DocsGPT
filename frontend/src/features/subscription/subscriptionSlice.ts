@@ -53,8 +53,8 @@ export const { setSubscription, setLoading, incrementUsage } =
   subscriptionSlice.actions;
 
 export const selectSubscription = (state: RootState) =>
-  state.subscription.current;
+  (state.subscription as SubscriptionState).current;
 export const selectSubscriptionLoading = (state: RootState) =>
-  state.subscription.isLoading;
+  (state.subscription as SubscriptionState).isLoading;
 
 export default subscriptionSlice.reducer;
