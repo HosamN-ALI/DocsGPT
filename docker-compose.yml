@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   mongodb:
     image: mongo:6
@@ -70,7 +68,7 @@ services:
       - ./uploads:/app/uploads
     networks:
       - docsgpt-network
-    command: celery -A application.celery_worker worker --loglevel=info
+    command: celery -A application.celery_init.celery worker --loglevel=info
 
 volumes:
   mongodb_data:

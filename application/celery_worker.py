@@ -3,7 +3,8 @@ Celery worker module for DocsGPT.
 This module initializes the Celery worker with the Flask application context.
 """
 
-from application.app import app, celery
+from application.celery_init import celery
+from application.app import app
 
 # Make Flask app context available to Celery tasks
 celery.conf.update(app.config)
