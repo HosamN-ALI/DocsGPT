@@ -48,7 +48,7 @@ services:
       - ./uploads:/app/uploads
     networks:
       - docsgpt-network
-    command: gunicorn --bind 0.0.0.0:7091 --workers 4 --timeout 120 "application.app:create_app()"
+    command: gunicorn --bind 0.0.0.0:7091 --workers 4 --timeout 120 "application.app:app"
 
   celery-worker:
     build:
@@ -70,7 +70,7 @@ services:
       - ./uploads:/app/uploads
     networks:
       - docsgpt-network
-    command: celery -A application.celery_worker.celery worker --loglevel=info
+    command: celery -A application.celery_worker worker --loglevel=info
 
 volumes:
   mongodb_data:

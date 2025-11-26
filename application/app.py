@@ -121,5 +121,10 @@ def after_request(response):
     return response
 
 
+def create_app():
+    """Factory function to create and configure the Flask app"""
+    return app
+
+
 if __name__ == "__main__":
     app.run(debug=settings.FLASK_DEBUG_MODE, port=7091)
