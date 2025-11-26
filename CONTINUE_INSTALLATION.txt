@@ -1,0 +1,173 @@
+========================================
+DocsGPT - Continue Installation on Server
+========================================
+
+You encountered an error during installation. Here's how to fix it and continue:
+
+ERROR YOU SAW:
+--------------
+ModuleNotFoundError: No module named 'application'
+
+CAUSE:
+------
+The init_db_indexes.py script was trying to import from the 'application' 
+module, but Python couldn't find it because the PYTHONPATH wasn't set.
+
+SOLUTION (2 Options):
+---------------------
+
+========================================
+OPTION 1: Quick Fix (Run on your server NOW)
+========================================
+
+The installation was interrupted, but we can continue from where it stopped.
+
+Run these commands on your server:
+
+cd /root/DocsGPT
+git pull origin main
+bash FIX_AND_CONTINUE.sh
+
+This will:
+✓ Install Python dependencies properly
+✓ Initialize MongoDB indexes with standalone script
+✓ Build and start frontend
+✓ Configure Nginx
+✓ Start backend services
+
+Time: 3-5 minutes
+
+========================================
+OPTION 2: Fresh Installation (Start Over)
+========================================
+
+If you want to start fresh with the fixed installer:
+
+cd /root
+rm -rf DocsGPT
+git clone https://github.com/HosamN-ALI/DocsGPT.git
+cd DocsGPT
+bash install_server_simple.sh
+
+This will run the complete installation with all fixes applied.
+
+Time: 5-10 minutes
+
+========================================
+WHAT WAS FIXED:
+========================================
+
+✓ Created init_db_standalone.py - doesn't require application module
+✓ Updated install_server_simple.sh to use standalone script
+✓ Set proper MONGO_URI and MONGO_DB_NAME environment variables
+✓ Suppressed pip root user warnings
+✓ All scripts are now executable
+
+========================================
+AFTER INSTALLATION COMPLETES:
+========================================
+
+1. UPDATE STRIPE KEYS
+
+   Edit backend .env:
+   nano /root/DocsGPT/.env
+   
+   Update these lines:
+   STRIPE_SECRET_KEY=sk_test_YOUR_KEY_HERE
+   STRIPE_PUBLISHABLE_KEY=pk_test_YOUR_KEY_HERE
+   STRIPE_WEBHOOK_SECRET=whsec_YOUR_SECRET_HERE
+
+   Edit frontend .env:
+   nano /root/DocsGPT/frontend/.env
+   
+   Update this line:
+   VITE_STRIPE_PUBLISHABLE_KEY=pk_test_YOUR_KEY_HERE
+
+2. RESTART SERVICES
+
+   cd /root/DocsGPT
+   docker compose restart backend
+   pm2 restart frontend
+
+3. TEST THE APPLICATION
+
+   # Test API
+   curl http://localhost:7091/api/subscription/plans
+   
+   # Test in browser
+   Open: http://78.31.67.155
+
+========================================
+VERIFICATION:
+========================================
+
+After installation, check that everything is running:
+
+# Check Docker services
+docker compose ps
+
+# Should show:
+# docsgpt-mongo     running
+# docsgpt-redis     running
+# docsgpt-backend   running
+# docsgpt-celery    running
+
+# Check PM2 frontend
+pm2 list
+
+# Should show:
+# frontend  │ online
+
+# Check Nginx
+systemctl status nginx
+
+# Should show:
+# active (running)
+
+# Test API endpoint
+curl http://localhost:7091/api/subscription/plans
+
+# Should return JSON with subscription plans
+
+========================================
+TROUBLESHOOTING:
+========================================
+
+If you still have issues:
+
+1. Check Backend Logs:
+   docker compose logs backend
+
+2. Check Frontend Logs:
+   pm2 logs frontend
+
+3. Check MongoDB Connection:
+   docker exec -it docsgpt-mongo mongosh
+   # Inside mongo shell:
+   use docsgpt
+   show collections
+   exit
+
+4. Full Reset (if needed):
+   cd /root/DocsGPT
+   docker compose down
+   docker compose up -d mongodb redis
+   sleep 10
+   python3 init_db_standalone.py
+   docker compose up -d backend celery-worker
+   pm2 restart frontend
+
+========================================
+RECOMMENDED: Use OPTION 1 (Quick Fix)
+========================================
+
+Since you're already at /root/DocsGPT and most services are set up,
+just run:
+
+cd /root/DocsGPT
+git pull origin main
+bash FIX_AND_CONTINUE.sh
+
+This will complete the installation in 3-5 minutes.
+
+========================================
